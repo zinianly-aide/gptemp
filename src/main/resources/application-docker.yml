@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://db:5432/employeesnapshot
+    username: admin
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.employeesnapshot.entity
+
+logging:
+  level:
+    root: INFO
+    com.example.employeesnapshot: DEBUG
