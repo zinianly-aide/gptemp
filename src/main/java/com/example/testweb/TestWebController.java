@@ -48,90 +48,73 @@ public class TestWebController {
             
         } catch (Exception e) {
             model.addAttribute("error", "无法获取统计数据: " + e.getMessage());
+            model.addAttribute("selectedDate", today);
         }
         
         return "dashboard";
     }
 
     /**
-     * 查看指定日期的员工快照数据
+     * 快照页面 - 显示指定日期的员工快照
      */
     @GetMapping("/snapshot")
-    public String snapshot(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                          Model model) {
+    public String snapshot(
+            @RequestParam(value = "date", required = false) 
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            Model model) {
+        
         if (date == null) {
             date = LocalDate.now();
         }
         
         try {
-            // 获取指定日期的员工快照数据
-            List<EmployeeIncremental> snapshotData = employeeSnapshotService.getSnapshotByDate(date);
-            model.addAttribute("snapshotData", snapshotData);
+            // 获取指定日期的员工快照
+            List<EmployeeIncremental> snapshot = employeeSnapshotService.getSnapshotByDate(date);
+            model.addAttribute("snapshot", snapshot);
             model.addAttribute("selectedDate", date);
+            model.addAttribute("employeeCount", snapshot.size());
+            
+            // 按部门统计
+            Map<String, Long> deptStats = snapshot.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                    emp -> emp.getDeptName() != null ? emp.getDeptName() : "未分配",
+                    java.util.stream.Collectors.counting()
+                ));
+            model.addAttribute("deptStats", deptStats);
+            
         } catch (Exception e) {
             model.addAttribute("error", "无法获取快照数据: " + e.getMessage());
+            model.addAttribute("selectedDate", date);
         }
         
         return "snapshot";
     }
 
     /**
-     * API控制器 - 提供JSON格式的数据接口
+     * 趋势页面 - 显示历史趋势图表
      */
-    @Controller
-    @RequestMapping("/api")
-    static class ApiController {
-        
-        private final MockEmployeeSnapshotService employeeSnapshotService;
-        
-        public ApiController(MockEmployeeSnapshotService employeeSnapshotService) {
-            this.employeeSnapshotService = employeeSnapshotService;
-        }
-        
-        /**
-         * 获取指定日期的员工统计数据
-         */
-        @GetMapping("/metrics")
-        @ResponseBody
-        public Map<String, Object> getMetrics(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-            if (date == null) {
-                date = LocalDate.now();
-            }
+    @GetMapping("/trends")
+    public String trends(Model model) {
+        try {
+            // 获取最近30天的数据用于趋势分析
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = endDate.minusDays(30);
             
-            try {
-                Map<String, Object> result = new HashMap<>();
-                result.put("success", true);
-                result.put("data", employeeSnapshotService.getCountsAndRates(date));
-                return result;
-            } catch (Exception e) {
-                Map<String, Object> errorResult = new HashMap<>();
-                errorResult.put("success", false);
-                errorResult.put("error", e.getMessage());
-                return errorResult;
-            }
+            model.addAttribute("startDate", startDate);
+            model.addAttribute("endDate", endDate);
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "无法获取趋势数据: " + e.getMessage());
         }
         
-        /**
-         * 获取指定日期的员工快照数据
-         */
-        @GetMapping("/snapshot")
-        @ResponseBody
-        public Map<String, Object> getSnapshot(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-            if (date == null) {
-                date = LocalDate.now();
-            }
-            
-            try {
-                Map<String, Object> result = new HashMap<>();
-                result.put("success", true);
-                result.put("data", employeeSnapshotService.getSnapshotByDate(date));
-                return result;
-            } catch (Exception e) {
-                Map<String, Object> errorResult = new HashMap<>();
-                errorResult.put("success", false);
-                errorResult.put("error", e.getMessage());
-                return errorResult;
-            }
-        }
+        return "trends";
+    }
+
+    /**
+     * API页面 - 提供交互式API测试
+     */
+    @GetMapping("/api-test")
+    public String apiTest(Model model) {
+        return "api-test";
     }
 }
