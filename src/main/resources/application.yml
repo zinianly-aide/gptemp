@@ -1,0 +1,27 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/employeesnapshot
+    username: admin
+    password: password
+    driver-class-name: org.postgresql.Driver
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.employeesnapshot.entity
+
+logging:
+  level:
+    root: INFO
+    com.example.employeesnapshot: DEBUG
+    org.springframework.web: INFO
+    org.thymeleaf: INFO
